@@ -1,76 +1,72 @@
-from firebase_admin import firestore
+import sqlite3
 import json
 from datetime import datetime
 
-def get_db():
-    """Get Firestore database instance"""
-    return firestore.client()
+DB_NAME = 'salary_tracker.db'
+
+def get_db_connection():
+    conn = sqlite3.connect(DB_NAME)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 def init_db():
-    """Initialize Firestore - no schema needed for NoSQL"""
-    # Firestore doesn't require schema initialization
-    # Collections are created automatically when first document is added
-    pass
+    conn = get_db_connection()
+    with conn:
+        conn.execute('''
+            CREATE TABLE IF NOT EXISTS entries (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                date TEXT NOT NULL,
+                income REAL NOT NULL,
+                deductions TEXT NOT NULL, -- JSON string
+                in_hand REAL NOT NULL
+            )
+        ''')
+    conn.close()
 
 def add_entry(date, income, deductions, in_hand):
-    """Add a new salary entry to Firestore"""
-    db = get_db()
-    entries_ref = db.collection('entries')
-    
-    entry_data = {
-        'date': date,
-        'income': income,
-        'deductions': deductions,  # Firestore supports nested objects
-        'in_hand': in_hand,
-        'created_at': firestore.SERVER_TIMESTAMP
-    }
-    
-    doc_ref = entries_ref.add(entry_data)
-    return doc_ref[1].id  # Return the document ID
+    conn = get_db_connection()
+    with conn:
+        conn.execute('''
+            INSERT INTO entries (date, income, deductions, in_hand)
+            VALUES (?, ?, ?, ?)
+        ''', (date, income, json.dumps(deductions), in_hand))
+    conn.close()
 
 def get_all_entries():
-    """Get all salary entries from Firestore, ordered by date descending"""
-    db = get_db()
-    entries_ref = db.collection('entries')
+    conn = get_db_connection()
+    entries = conn.execute('SELECT * FROM entries ORDER BY date DESC').fetchall()
+    conn.close()
     
-    # Query entries ordered by date descending
-    docs = entries_ref.order_by('date', direction=firestore.Query.DESCENDING).stream()
-    
+    # Convert rows to dicts and parse JSON
     results = []
-    for doc in docs:
-        entry = doc.to_dict()
-        entry['id'] = doc.id  # Add document ID to the entry
+    for row in entries:
+        entry = dict(row)
+        entry['deductions'] = json.loads(entry['deductions'])
         results.append(entry)
-    
     return results
 
 def delete_entry(entry_id):
-    """Delete a salary entry from Firestore"""
-    db = get_db()
-    db.collection('entries').document(entry_id).delete()
+    conn = get_db_connection()
+    with conn:
+        conn.execute('DELETE FROM entries WHERE id = ?', (entry_id,))
+    conn.close()
 
 def get_entry(entry_id):
-    """Get a single salary entry by ID"""
-    db = get_db()
-    doc = db.collection('entries').document(entry_id).get()
-    
-    if doc.exists:
-        entry = doc.to_dict()
-        entry['id'] = doc.id
+    conn = get_db_connection()
+    entry = conn.execute('SELECT * FROM entries WHERE id = ?', (entry_id,)).fetchone()
+    conn.close()
+    if entry:
+        entry = dict(entry)
+        entry['deductions'] = json.loads(entry['deductions'])
         return entry
     return None
 
 def update_entry(entry_id, date, income, deductions, in_hand):
-    """Update an existing salary entry in Firestore"""
-    db = get_db()
-    entry_ref = db.collection('entries').document(entry_id)
-    
-    entry_data = {
-        'date': date,
-        'income': income,
-        'deductions': deductions,
-        'in_hand': in_hand,
-        'updated_at': firestore.SERVER_TIMESTAMP
-    }
-    
-    entry_ref.update(entry_data)
+    conn = get_db_connection()
+    with conn:
+        conn.execute('''
+            UPDATE entries 
+            SET date = ?, income = ?, deductions = ?, in_hand = ?
+            WHERE id = ?
+        ''', (date, income, json.dumps(deductions), in_hand, entry_id))
+    conn.close()
