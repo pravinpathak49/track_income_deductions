@@ -232,14 +232,21 @@ input:focus {
     display: flex;
     gap: 10px;
     margin-bottom: 10px;
+    align-items: center;
 }
 
-.deduction-row input:first-child {
+.deduction-row input[type="text"] {
+    flex: 3;
+    min-width: 200px;
+}
+
+.deduction-row input[type="number"] {
     flex: 2;
+    min-width: 120px;
 }
 
-.deduction-row input:last-child {
-    flex: 1;
+.deduction-row .remove-row {
+    flex-shrink: 0;
 }
 
 .section-header {
