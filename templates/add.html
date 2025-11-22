@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="form-container">
+    <div class="section-header">
+        <h2>Add New Entry</h2>
+    </div>
+
+    <form action="{{ url_for('add') }}" method="POST" id="salaryForm">
+        <div class="form-group">
+            <label for="date">Date</label>
+            <input type="date" id="date" name="date" value="{{ today }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="income">Total Income (Before Tax)</label>
+            <input type="number" id="income" name="income" step="0.01" required placeholder="e.g. 100000">
+        </div>
+
+        <div class="form-group">
+            <label>Deductions</label>
+            <div id="deductions-container" class="deductions-list">
+                <!-- Dynamic fields will appear here -->
+                <div class="deduction-row">
+                    <input type="text" name="deduction_name[]" placeholder="Deduction Name (e.g. Tax)" required>
+                    <input type="number" name="deduction_amount[]" placeholder="Amount" step="0.01"
+                        class="deduction-amount" required>
+                </div>
+            </div>
+            <button type="button" class="btn btn-secondary" id="add-deduction-btn" style="width: 100%;">+ Add Another
+                Deduction</button>
+        </div>
+
+        <div class="form-group">
+            <label for="in_hand">Total In-Hand Received</label>
+            <input type="number" id="in_hand" name="in_hand" step="0.01" required
+                placeholder="Calculated automatically if possible, or enter manually">
+            <small style="color: var(--text-secondary); display: block; margin-top: 5px;">
+                Auto-calculated: <span id="calc-preview">--</span>
+            </small>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <button type="submit" class="btn" style="width: 100%;">Save Entry</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

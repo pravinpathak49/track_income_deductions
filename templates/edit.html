@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="form-container">
+    <div class="section-header">
+        <h2>Edit Entry</h2>
+    </div>
+
+    <form action="{{ url_for('edit', id=entry.id) }}" method="POST" id="salaryForm">
+        <div class="form-group">
+            <label for="date">Date</label>
+            <input type="date" id="date" name="date" value="{{ entry.date }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="income">Total Income (Before Tax)</label>
+            <input type="number" id="income" name="income" step="0.01" value="{{ entry.income }}" required
+                placeholder="e.g. 100000">
+        </div>
+
+        <div class="form-group">
+            <label>Deductions</label>
+            <div id="deductions-container" class="deductions-list">
+                {% for deduction in entry.deductions %}
+                <div class="deduction-row">
+                    <input type="text" name="deduction_name[]" value="{{ deduction.name }}"
+                        placeholder="Deduction Name (e.g. Tax)" required>
+                    <input type="number" name="deduction_amount[]" value="{{ deduction.amount }}" placeholder="Amount"
+                        step="0.01" class="deduction-amount" required>
+                    {% if not loop.first %}
+                    <button type="button" class="btn-remove" onclick="this.parentElement.remove()">×</button>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                {% if not entry.deductions %}
+                <div class="deduction-row">
+                    <input type="text" name="deduction_name[]" placeholder="Deduction Name (e.g. Tax)" required>
+                    <input type="number" name="deduction_amount[]" placeholder="Amount" step="0.01"
+                        class="deduction-amount" required>
+                </div>
+                {% endif %}
+            </div>
+            <button type="button" class="btn btn-secondary" id="add-deduction-btn" style="width: 100%;">+ Add Another
+                Deduction</button>
+        </div>
+
+        <div class="form-group">
+            <label for="in_hand">Total In-Hand Received</label>
+            <input type="number" id="in_hand" name="in_hand" step="0.01" value="{{ entry.in_hand }}" required
+                placeholder="Calculated automatically if possible, or enter manually">
+            <small style="color: var(--text-secondary); display: block; margin-top: 5px;">
+                Auto-calculated: <span id="calc-preview">--</span>
+            </small>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <button type="submit" class="btn" style="width: 100%;">Update Entry</button>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary"
+                style="display: block; text-align: center; margin-top: 10px; background: transparent; border: 1px solid var(--border-color);">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Re-use the script from base or add specific script here if needed.
+    // Assuming base.html or a common js file handles the dynamic deduction rows and calculation.
+    // If not, I should probably check if I need to duplicate the JS logic or if it's in a separate file.
+    // Checking add.html again, it didn't seem to have inline JS for the logic, so it must be in base.html or a static JS file.
+    // Wait, add.html didn't have the JS logic visible in the view_file output?
+    // Let me check static/script.js if it exists or if it was in base.html.
+    // Actually, looking at the file list, there is static/style.css but I didn't see a script.js.
+    // Let me double check the file list.
+</script>
+{% endblock %}
